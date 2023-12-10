@@ -5,10 +5,11 @@ const CardContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+  margin-right: -29px;
 `;
 
 const Card = styled.div`
-  width: 22%;
+  flex: 0 0 23%;
   padding: 16px;
   margin-bottom: 50px;
   margin-right: 29px;
