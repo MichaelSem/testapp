@@ -1,88 +1,44 @@
 import { useState, useEffect } from "react";
-import styled from "styled-components";
+import PropTypes from "prop-types";
 
-const CardContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  margin-right: -29px;
-`;
+import { Card, CardContainer } from "./CatalogPage.styled";
+import {
+  ModalOverlay,
+  ModalContent,
+} from "../../components/CatalogModal/Modal";
 
-const Card = styled.div`
-  flex: 0 0 23%;
-  padding: 16px;
-  margin-bottom: 50px;
-  margin-right: 29px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
+const AdCard = ({ ad, onClick }) => (
+  <Card onClick={onClick}>
+    <img src={ad.img} alt={ad.make} />
+    <h3>
+      {ad.make} {ad.model} {ad.rentalPrice}
+    </h3>
+    <p>Id: {ad.id}</p>
+    <p>Year: {ad.year}</p>
+    <p>Type: {ad.type}</p>
+  </Card>
+);
 
-  img {
-    width: 100%;
-    height: auto;
-    margin-bottom: 8px;
-  }
-
-  h3 {
-    margin-bottom: 8px;
-  }
-`;
-
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-`;
-
-const ModalContent = styled.div`
-  width: 461px;
-  height: 248px;
-  background-color: #fff;
-  overflow: hidden;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  img {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-    overflow: hidden;
-  }
-
-  .modal-info {
-    margin: 16px;
-  }
-
-  h3 {
-    margin-bottom: 8px;
-  }
-
-  p {
-    margin-bottom: 4px;
-    font-size: 14px;
-  }
-
-  .modal-accessories,
-  .modal-functionalities {
-    font-size: 12px;
-  }
-`;
+AdCard.propTypes = {
+  ad: PropTypes.shape({
+    img: PropTypes.string,
+    make: PropTypes.string,
+    model: PropTypes.string,
+    rentalPrice: PropTypes.string,
+    id: PropTypes.string,
+    year: PropTypes.number,
+    type: PropTypes.string,
+  }).isRequired,
+  onClick: PropTypes.func.isRequired,
+};
 
 const Catalog = () => {
   const [ads, setAds] = useState([]);
+  const [selectedMake, setSelectedMake] = useState(null);
+  const [filteredAds, setFilteredAds] = useState([]);
   const [selectedAd, setSelectedAd] = useState(null);
 
   useEffect(() => {
-    // Fetch the ads data from the mock API and set it using setAds
     const fetchData = async () => {
       try {
         const response = await fetch(
@@ -98,6 +54,18 @@ const Catalog = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    let sortedAds = [...ads]; // Copy the original ads array
+
+    if (selectedMake) {
+      sortedAds = ads.filter((ad) => ad.make === selectedMake);
+    } else {
+      sortedAds.sort((a, b) => a.make.localeCompare(b.make)); // Sort by make using localeCompare
+    }
+
+    setFilteredAds(sortedAds);
+  }, [selectedMake, ads]);
+
   const handleCardClick = (ad) => {
     setSelectedAd(ad);
   };
@@ -106,52 +74,58 @@ const Catalog = () => {
     setSelectedAd(null);
   };
 
+  const handleMakeChange = (e) => {
+    setSelectedMake(e.target.value);
+  };
+
   const renderModal = () => {
     if (!selectedAd) return null;
 
     return (
       <ModalOverlay onClick={handleModalClose}>
-        <ModalContent>
-          <img src={selectedAd.img} alt={selectedAd.make} />
-          <div className="modal-info">
-            <h3>
-              {selectedAd.make} {selectedAd.model} - {selectedAd.year}
-            </h3>
-            <p>Address: {selectedAd.address}</p>
-            <p>Id: {selectedAd.id}</p>
-            <p>Year: {selectedAd.year}</p>
-            <p>Type: {selectedAd.type}</p>
-            <p>Fuel Consumption: {selectedAd.fuelConsumption}</p>
-            <p>Engine Size: {selectedAd.engineSize}</p>
-            <p>Description: {selectedAd.description}</p>
-            <p>Accessories: {selectedAd.accessories.join(", ")}</p>
-            <p>Functionalities: {selectedAd.functionalities.join(", ")}</p>
-            <p>Rental Conditions:</p>
-            <p>{selectedAd.rentalConditions}</p>
-            <button className="modal-button">Rental Car</button>
-          </div>
-        </ModalContent>
+        <ModalContent selectedAd={selectedAd} onClose={handleModalClose} />
       </ModalOverlay>
     );
   };
 
-  // Implement the sorting functionality for the catalog here
-
   return (
     <div>
       <h2>Catalog</h2>
+      <div>
+        <select value={selectedMake} onChange={handleMakeChange}>
+          <option value="">All Makes</option>
+          <option value="Buick">Buick</option>
+          <option value="Volvo">Volvo</option>
+          <option value="HUMMER">HUMMER</option>
+          <option value="Subaru">Subaru</option>
+          <option value="Mitsubishi">Mitsubishi</option>
+          <option value="Nissan">Nissan</option>
+          <option value="Lincoln">Lincoln</option>
+          <option value="GMC">GMC</option>
+          <option value="Hyundai">Hyundai</option>
+          <option value="MINI">MINI</option>
+          <option value="Bentley">Bentley</option>
+          <option value="Mercedes-Benz">Mercedes-Benz</option>
+          <option value="Aston Martin">Aston Martin</option>
+          <option value="Pontiac">Pontiac</option>
+          <option value="Lamborghini">Lamborghini</option>
+          <option value="Audi">Audi</option>
+          <option value="BMW">BMW</option>
+          <option value="Chevrolet">Chevrolet</option>
+          <option value="Chrysler">Chrysler</option>
+          <option value="Kia">Kia</option>
+          <option value="Land">Land</option>
+          {/* Remaining options */}
+        </select>
+      </div>
       <CardContainer>
-        {ads.map((ad) => (
-          <Card key={ad.id} onClick={() => handleCardClick(ad)}>
-            <img src={ad.img} alt={ad.make} />
-            <h3>
-              {ad.make} {ad.model} {ad.rentalPrice}
-            </h3>
-            <p>Id: {ad.id}</p>
-            <p>Year: {ad.year}</p>
-            <p>Type: {ad.type}</p>
-          </Card>
-        ))}
+        {filteredAds.length > 0 ? (
+          filteredAds.map((ad) => (
+            <AdCard key={ad.id} ad={ad} onClick={() => handleCardClick(ad)} />
+          ))
+        ) : (
+          <p>No cars found for the selected make.</p>
+        )}
       </CardContainer>
       {renderModal()}
     </div>
