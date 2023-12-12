@@ -2,7 +2,12 @@ import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import axios from "axios"; // import Axios
 
-import { Card, CardContainer, CardImage } from "./CatalogPage.styled";
+import {
+  Card,
+  CardContainer,
+  CardImage,
+  Container,
+} from "./CatalogPage.styled";
 import {
   ModalOverlay,
   ModalContent,
@@ -130,7 +135,7 @@ const Catalog = () => {
   };
 
   return (
-    <div>
+    <Container>
       <h2>Catalog</h2>
       <div>
         <select value={selectedMake} onChange={handleMakeChange}>
@@ -154,7 +159,7 @@ const Catalog = () => {
       </CardContainer>
       <button onClick={handleLoadMore}>Load More</button>
       {renderModal()}
-    </div>
+    </Container>
   );
 };
 

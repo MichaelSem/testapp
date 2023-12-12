@@ -1,14 +1,13 @@
 import styled from "styled-components";
 
 export const Container = styled.div`
-  padding-top: 40px;
-  padding-bottom: 117px;
   display: flex;
   flex-direction: column;
   align-items: center;
 `;
 
 export const CardContainer = styled.div`
+  width: 75%;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
