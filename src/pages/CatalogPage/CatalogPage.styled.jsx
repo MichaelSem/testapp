@@ -1,5 +1,13 @@
 import styled from "styled-components";
 
+export const Container = styled.div`
+  padding-top: 40px;
+  padding-bottom: 117px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
 export const CardContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -14,13 +22,16 @@ export const Card = styled.div`
   border-radius: 4px;
   cursor: pointer;
 
-  img {
-    width: 100%;
-    height: auto;
-    margin-bottom: 8px;
-  }
-
   h3 {
     margin-bottom: 8px;
   }
+`;
+
+export const CardImage = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 274px;
+  height: 268px;
+  overflow: hidden;
+  background-color: rgba(230, 230, 230, 0.5);
 `;

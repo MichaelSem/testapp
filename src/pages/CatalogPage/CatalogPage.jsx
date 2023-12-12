@@ -1,23 +1,36 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import axios from "axios"; // import Axios
 
-import { Card, CardContainer } from "./CatalogPage.styled";
+import { Card, CardContainer, CardImage } from "./CatalogPage.styled";
 import {
   ModalOverlay,
   ModalContent,
 } from "../../components/CatalogModal/Modal";
 
-const AdCard = ({ ad, onClick }) => (
-  <Card onClick={onClick}>
-    <img src={ad.img} alt={ad.make} />
-    <h3>
-      {ad.make} {ad.model} {ad.rentalPrice}
-    </h3>
-    <p>Id: {ad.id}</p>
-    <p>Year: {ad.year}</p>
-    <p>Type: {ad.type}</p>
-  </Card>
-);
+const AdCard = ({ ad, onClick, onLearnMoreClick }) => {
+  const handleLearnMoreClick = (e) => {
+    e.stopPropagation();
+    onLearnMoreClick(e, ad);
+  };
+
+  return (
+    <Card onClick={onClick}>
+      <CardImage>
+        <img src={ad.img} alt={ad.make} />
+      </CardImage>
+
+      <h3>
+        {ad.make} {ad.model} {ad.rentalPrice}
+      </h3>
+      <p>Id: {ad.id}</p>
+      <p>Year: {ad.year}</p>
+      <p>Type: {ad.type}</p>
+
+      <button onClick={handleLearnMoreClick}>Learn More</button>
+    </Card>
+  );
+};
 
 AdCard.propTypes = {
   ad: PropTypes.shape({
@@ -30,6 +43,7 @@ AdCard.propTypes = {
     type: PropTypes.string,
   }).isRequired,
   onClick: PropTypes.func.isRequired,
+  onLearnMoreClick: PropTypes.func.isRequired,
 };
 
 const Catalog = () => {
@@ -37,37 +51,64 @@ const Catalog = () => {
   const [selectedMake, setSelectedMake] = useState(null);
   const [filteredAds, setFilteredAds] = useState([]);
   const [selectedAd, setSelectedAd] = useState(null);
+  const [makes, setMakes] = useState([]);
+  const [loadedAds, setLoadedAds] = useState(12); // Initial value is 12
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          "https://6573c5a1f941bda3f2af2023.mockapi.io/advert/advert"
+        const response = await axios.get(
+          `https://6573c5a1f941bda3f2af2023.mockapi.io/advert/advert`
         );
-        const data = await response.json();
-        setAds(data);
+        setAds(response.data);
+        const uniqueMakes = [...new Set(response.data.map((ad) => ad.make))];
+        setMakes(uniqueMakes);
       } catch (error) {
         console.error("Error fetching ads:", error);
       }
     };
 
     fetchData();
-  }, []);
+  }, [selectedMake, loadedAds]);
 
   useEffect(() => {
     let sortedAds = [...ads]; // Copy the original ads array
 
     if (selectedMake) {
-      sortedAds = ads.filter((ad) => ad.make === selectedMake);
-    } else {
-      sortedAds.sort((a, b) => a.make.localeCompare(b.make)); // Sort by make using localeCompare
+      sortedAds = sortedAds.filter((ad) => ad.make === selectedMake);
     }
+
+    sortedAds.sort((a, b) => {
+      // Sort by make
+      if (a.make < b.make) {
+        return -1;
+      }
+      if (a.make > b.make) {
+        return 1;
+      }
+
+      // If make is the same, sort by rental price
+      return parseInt(a.rentalPrice) - parseInt(b.rentalPrice);
+    });
 
     setFilteredAds(sortedAds);
   }, [selectedMake, ads]);
 
-  const handleCardClick = (ad) => {
+  const handleCardClick = (ad, e) => {
+    if (e.target.tagName.toLowerCase() !== "button") {
+      if (!e.target.closest("button")) {
+        setSelectedAd(ad);
+      }
+    }
+  };
+
+  const handleLearnMoreClick = (e, ad) => {
+    e.stopPropagation(); // Prevent click on the card itself
     setSelectedAd(ad);
+  };
+
+  const handleLoadMore = () => {
+    setLoadedAds((prevLoadedAds) => prevLoadedAds + 12); // Increase the number of loaded ads by 12
   };
 
   const handleModalClose = () => {
@@ -94,39 +135,24 @@ const Catalog = () => {
       <div>
         <select value={selectedMake} onChange={handleMakeChange}>
           <option value="">All Makes</option>
-          <option value="Buick">Buick</option>
-          <option value="Volvo">Volvo</option>
-          <option value="HUMMER">HUMMER</option>
-          <option value="Subaru">Subaru</option>
-          <option value="Mitsubishi">Mitsubishi</option>
-          <option value="Nissan">Nissan</option>
-          <option value="Lincoln">Lincoln</option>
-          <option value="GMC">GMC</option>
-          <option value="Hyundai">Hyundai</option>
-          <option value="MINI">MINI</option>
-          <option value="Bentley">Bentley</option>
-          <option value="Mercedes-Benz">Mercedes-Benz</option>
-          <option value="Aston Martin">Aston Martin</option>
-          <option value="Pontiac">Pontiac</option>
-          <option value="Lamborghini">Lamborghini</option>
-          <option value="Audi">Audi</option>
-          <option value="BMW">BMW</option>
-          <option value="Chevrolet">Chevrolet</option>
-          <option value="Chrysler">Chrysler</option>
-          <option value="Kia">Kia</option>
-          <option value="Land">Land</option>
-          {/* Remaining options */}
+          {makes.map((make) => (
+            <option key={make} value={make}>
+              {make}
+            </option>
+          ))}
         </select>
       </div>
       <CardContainer>
-        {filteredAds.length > 0 ? (
-          filteredAds.map((ad) => (
-            <AdCard key={ad.id} ad={ad} onClick={() => handleCardClick(ad)} />
-          ))
-        ) : (
-          <p>No cars found for the selected make.</p>
-        )}
+        {filteredAds.slice(0, loadedAds).map((ad) => (
+          <AdCard
+            key={ad.id}
+            ad={ad}
+            onClick={(e) => handleCardClick(ad, e)}
+            onLearnMoreClick={handleLearnMoreClick}
+          />
+        ))}
       </CardContainer>
+      <button onClick={handleLoadMore}>Load More</button>
       {renderModal()}
     </div>
   );
